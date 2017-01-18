@@ -13,7 +13,7 @@
  */
 int version_major = 1;
 int version_minor = 0;
-char version_letter = ' ';
+char version_letter = 'a';
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -178,7 +178,6 @@ char log_filename[256];	// Name of .log file to create (Default: XAirRemote.log)
 
 int main(int argc, char **argv) {
 
-	int temp;
 	int sync_count = 0;
 	Xverbose = Xdelay = 0;
 	
@@ -556,12 +555,10 @@ int XAirParseXAirMessage() {
 
 	int Xb_i = 0;
 	int Rb_ls = 0;
-	int Xb_ls = 0;
 	int cnum, bus, dca, fxs, i;
 	char tmp[32];
 
 	float fone = 1.0;
-	int six4 = 64;
 
 // What is the XAir message made of?
 // XAir format is:
