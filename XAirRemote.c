@@ -4,16 +4,24 @@
  *  Created on: 20 mars 2015 (X32Reaper.c)
  *      Author: Patrick-Gilles Maillot
  *
+ * Copyright (c) 2015 Patrick-Gilles Maillot
+ *
  *  Ported to XAir Series on: 11 Nov 2016 (XAirRemote.c)
  *      Author: Ken Mitchell
  *
+ *  Port Modifications Copyright (c) 2016 Ken Mitchell
+ *  
  *  - Renamed to XAirRemote vs. XAirReaper since I plan on
  *    making it a more general purpose tool. 
  * 
+ *   This code is distributed as Freeware for non-commercial users.
+ *   Commercial users should contact myself and Patrick before using
+ *   this utility or distributing this code.
+ *
  */
 int version_major = 1;
-int version_minor = 0;
-char version_letter = 'a';
+int version_minor = 1;
+char version_letter = ' ';
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -253,8 +261,8 @@ int main(int argc, char **argv) {
 			// run SW as long as needed
 			while (MainLoopOn) {
 				now = time(NULL); 			// get time in seconds
-				if (now > before + 9) { 	// need to keep xremote alive?
-					Xb_ls = Xsprint(Xb_s, 0, 's', "/xremote");
+				if (now > before + 9) { 	// need to keep /xremotenfb alive?
+					Xb_ls = Xsprint(Xb_s, 0, 's', "/xremotenfb");
 					SEND_TOX(Xb_s, Xb_ls)
 					before = now;
 				}

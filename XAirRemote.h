@@ -1,3 +1,12 @@
+/*
+ * XAirRemote.h
+ *
+ *  Created: 11 Nov 2016 (XAirRemote.h)
+ *      Author: Ken Mitchell
+ *      
+ *  Copyright (c) 2016 Ken Mitchell
+ *  
+ */
 char* Xsync_data[] = {
 	"/info",  
 //
