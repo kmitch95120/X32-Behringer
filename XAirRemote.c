@@ -20,7 +20,7 @@
  *
  */
 int version_major = 1;
-int version_minor = 1;
+int version_minor = 2;
 char version_letter = ' ';
 #include <stdlib.h>
 #include <stdio.h>
@@ -570,11 +570,12 @@ int XAirParseXAirMessage() {
 
 // What is the XAir message made of?
 // XAir format is:
-//	/ch/%02d/mix/pan......,f..[float]		%02d = 01..16
-//	/ch/%02d/mix/fader....,f..[float]		%02d = 01..16
-//	/ch/%02d/mix/on.......,i..[0/1]			%02d = 01..16
-//	/ch/%02d/config/name..,s..[string\0]	%02d = 01..16
+//	/ch/%02d/mix/pan..........,f..[float]		%02d = 01..16
+//	/ch/%02d/mix/fader........,f..[float]		%02d = 01..16
+//	/ch/%02d/mix/on...........,i..[0/1]			%02d = 01..16
+//	/ch/%02d/config/name......,s..[string\0]	%02d = 01..16
 //	/ch/%02d/mix/%02d/level...,f..[float]	%02d = 01..16 / %02d = 01..10
+//	/ch/%02d/mix/%02d/pan.....,f..[float]	%02d = 01..16 / %02d = 01, 03, 05
 //
 // Same applies to /rtn/aux and /rtn as for /ch above
 //
@@ -644,6 +645,13 @@ int XAirParseXAirMessage() {
 						for (i = 4; i > 0; endian.cc[--i] = Xb_r[Xb_i++]);
 						sprintf(tmp, "/track/%d/send/%d/volume", cnum + Xtrk_min - 1, bus);
 						Rb_ls = Xfprint(Rb_s, 0, tmp, 'f', &endian.ff);
+					} else if (Xb_r[Xb_i] == 'p') {
+						//	/ch/%02d/mix/%02d/pan....,f..[float]
+						while (Xb_r[Xb_i] != ',') Xb_i += 1;
+						Xb_i += 4;
+						for (i = 4; i > 0; endian.cc[--i] = Xb_r[Xb_i++]);
+						sprintf(tmp, "/track/%d/send/%d/pan", cnum + Xtrk_min - 1, bus);
+						Rb_ls = Xfprint(Rb_s, 0, tmp, 'f', &endian.ff);						
 					}
 				}
 			} else if ((Xb_r[Xb_i] == 'c') && (Xb_r[Xb_i + 7] == 'n')){
@@ -699,6 +707,13 @@ int XAirParseXAirMessage() {
 					for (i = 4; i > 0; endian.cc[--i] = Xb_r[Xb_i++]);
 					sprintf(tmp, "/track/%d/send/%d/volume", cnum + Xaux_min - 1, bus);
 					Rb_ls = Xfprint(Rb_s, 0, tmp, 'f', &endian.ff);
+				} else if (Xb_r[Xb_i] == 'p') {
+					//	/rtn/aux/mix/%02d/pan....,f..[float]
+					while (Xb_r[Xb_i] != ',') Xb_i += 1;
+					Xb_i += 4;
+					for (i = 4; i > 0; endian.cc[--i] = Xb_r[Xb_i++]);
+					sprintf(tmp, "/track/%d/send/%d/pan", cnum + Xaux_min - 1, bus);
+					Rb_ls = Xfprint(Rb_s, 0, tmp, 'f', &endian.ff);					
 				}
 			}
 		}  else if ((Xb_r[Xb_i] == 'c') && (Xb_r[Xb_i + 7] == 'n')){
@@ -755,6 +770,13 @@ int XAirParseXAirMessage() {
 						for (i = 4; i > 0; endian.cc[--i] = Xb_r[Xb_i++]);
 						sprintf(tmp, "/track/%d/send/%d/volume", cnum + Xfxr_min - 1, bus);
 						Rb_ls = Xfprint(Rb_s, 0, tmp, 'f', &endian.ff);
+					} else if (Xb_r[Xb_i] == 'p') {
+						//	/rtn/%02d/mix/%02d/pan....,f..[float]
+						while (Xb_r[Xb_i] != ',') Xb_i += 1;
+						Xb_i += 4;
+						for (i = 4; i > 0; endian.cc[--i] = Xb_r[Xb_i++]);
+						sprintf(tmp, "/track/%d/send/%d/pan", cnum + Xfxr_min - 1, bus);
+						Rb_ls = Xfprint(Rb_s, 0, tmp, 'f', &endian.ff);						
 					}
 				}
 			} else if ((Xb_r[Xb_i] == 'c') && (Xb_r[Xb_i + 7] == 'n')){
@@ -1037,7 +1059,7 @@ int XAirParseRemoteMessage() {
 				while (Rb_r[Rb_i] != ',') Rb_i += 1;
 				Rb_i += 4;
 				for (i = 4; i > 0; endian.cc[--i] = Rb_r[Rb_i++]);
-//					/track/[01-N]/mix/pan ,f -100 100
+//					/track/[1-N]/mix/pan ,f -100 100
 				if ((tnum >= Xtrk_min) && (tnum <= Xtrk_max))  		sprintf(tmp, "/ch/%02d/mix/pan", tnum  - Xtrk_min + 1);
 				else if ((tnum >= Xaux_min) && (tnum <= Xaux_max))	sprintf(tmp, "/rtn/aux/mix/pan");
 				else if ((tnum >= Xfxr_min) && (tnum <= Xfxr_max))	sprintf(tmp, "/rtn/%1d/mix/pan", tnum - Xfxr_min + 1);
@@ -1059,7 +1081,7 @@ int XAirParseRemoteMessage() {
 // REAPER buffers the changes for the other tracks and applies them after the changes on one of the Tracks
 // are done. This results in an infinite loop. :(
 //
-//					/track/[01-N]/mix/fader ,f 0..1
+//					/track/[1-N]/mix/fader ,f 0..1
 				if ((tnum >= Xtrk_min) && (tnum <= Xtrk_max))		sprintf(tmp, "/ch/%02d/mix/fader", tnum - Xtrk_min + 1);
 				else if ((tnum >= Xaux_min) && (tnum <= Xaux_max))	sprintf(tmp, "/rtn/aux/mix/fader");
 				else if ((tnum >= Xfxr_min) && (tnum <= Xfxr_max))	sprintf(tmp, "/rtn/%1d/mix/fader", tnum - Xfxr_min + 1);
@@ -1071,7 +1093,7 @@ int XAirParseRemoteMessage() {
 			} else if (Rb_r[Rb_i] == 'n') { // /track/xx/name
 				while (Rb_r[Rb_i] != ',') Rb_i += 1;
 				Rb_i += 4;
-//					/track/[01-N]/config/name ,s string
+//					/track/[1-N]/config/name ,s string
 				if ((tnum >= Xtrk_min) && (tnum <= Xtrk_max))		sprintf(tmp, "/ch/%02d/config/name", tnum - Xtrk_min + 1);
 				else if ((tnum >= Xaux_min) && (tnum <= Xaux_max))	sprintf(tmp, "/rtn/aux/config/name");
 				else if ((tnum >= Xfxr_min) && (tnum <= Xfxr_max))	sprintf(tmp, "/rtn/%1d/config/name", tnum - Xfxr_min + 1);
@@ -1087,7 +1109,7 @@ int XAirParseRemoteMessage() {
 				Rb_i += 4;
 				for (i = 4; i > 0; endian.cc[--i] = Rb_r[Rb_i++]);
 				i = 1 - (int) endian.ff;
-//					/track/[01-N]/mix/on ,i 0/1
+//					/track/[1-N]/mix/on ,i 0/1
 				if ((tnum >= Xtrk_min) && (tnum <= Xtrk_max))		sprintf(tmp, "/ch/%02d/mix/on", tnum - Xtrk_min + 1);
 				else if ((tnum >= Xaux_min) && (tnum <= Xaux_max))	sprintf(tmp, "/rtn/aux/mix/on");
 				else if ((tnum >= Xfxr_min) && (tnum <= Xfxr_max))	sprintf(tmp, "/rtn/%1d/mix/on", tnum - Xfxr_min + 1);
@@ -1115,6 +1137,16 @@ int XAirParseRemoteMessage() {
 						if ((tnum >= Xtrk_min) && (tnum <= Xtrk_max))		sprintf(tmp, "/ch/%02d/mix/%02d/level", tnum - Xtrk_min + 1, bus);
 						else if ((tnum >= Xaux_min) && (tnum <= Xaux_max))	sprintf(tmp, "/rtn/aux/mix/%02d/level", bus);
 						else if ((tnum >= Xfxr_min) && (tnum <= Xfxr_max))	sprintf(tmp, "/rtn/%1d/mix/%02d/level", tnum - Xfxr_min + 1, bus);
+						else tnum = -1;
+						if (tnum > 0) Xb_ls = Xfprint(Xb_s, 0, tmp, 'f', &endian.ff);
+					} else if (Rb_r[Rb_i] == 'p') { // pan <float>
+						while (Rb_r[Rb_i] != ',') Rb_i += 1;
+						Rb_i += 4;
+						for (i = 4; i > 0; endian.cc[--i] = Rb_r[Rb_i++]);
+						// /track/<tnum>/mix/<bus>/pan ,f 0...1.
+						if ((tnum >= Xtrk_min) && (tnum <= Xtrk_max))		sprintf(tmp, "/ch/%02d/mix/%02d/pan", tnum - Xtrk_min + 1, bus);
+						else if ((tnum >= Xaux_min) && (tnum <= Xaux_max))	sprintf(tmp, "/rtn/aux/mix/%02d/pan", bus);
+						else if ((tnum >= Xfxr_min) && (tnum <= Xfxr_max))	sprintf(tmp, "/rtn/%1d/mix/%02d/pan", tnum - Xfxr_min + 1, bus);
 						else tnum = -1;
 						if (tnum > 0) Xb_ls = Xfprint(Xb_s, 0, tmp, 'f', &endian.ff);
 					}
