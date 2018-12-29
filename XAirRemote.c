@@ -21,10 +21,9 @@
  */
 int version_major = 1;
 int version_minor = 2;
-char version_letter = ' ';
+char version_letter = 'a';
 #include <stdlib.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <string.h>
 #include <time.h>
 #include <math.h>
@@ -36,6 +35,7 @@ char version_letter = ' ';
 #define MySleep(a)	Sleep(a)
 #define socklen_t	int
 #else
+#include <unistd.h>
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <netinet/in.h>
